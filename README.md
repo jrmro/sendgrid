@@ -26,3 +26,5 @@ $sendgrid = sendgrid([
     )
 ]);
 ```
+## Return Values
+Function returns an associative array with the following values: 'error' (bool) , 'message' (string). Upon success, 'error' will be false (bool)

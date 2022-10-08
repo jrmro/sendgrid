@@ -22,7 +22,7 @@
 * 		[ 'content' => 'BASE64_ENCODED_CONTENT', 'type' => 'text/plain', 'filename' => 'attachment2.txt' ], 
 * 		[ 'content' => 'BASE64_ENCODED_CONTENT', 'type' => 'text/plain', 'filename' => 'attachment3.txt' ], 
 * 	)
-* );
+* ]);
 *
 * @author     Joseph Romero
 * @version    1.0

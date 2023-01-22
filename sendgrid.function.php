@@ -61,7 +61,7 @@ if ( ! function_exists('sendgrid'))
 				if(empty($params[$required])) $missing_params[] = $required;
 			}
 				
-			if( ! empty($missing_params)) return array('error' => true, 'message' => 'The following required parameters are missing: ' . implode(', ', $missing_params));
+			if( ! empty($missing_params)) return array('error' => true, 'message' => 'The following required parameters are missing: ' . implode(', ', $missing_params), 'status' => 0);
 
 
 		// Create $fields array template
@@ -113,7 +113,7 @@ if ( ! function_exists('sendgrid'))
 				if( isset($params[$personalization]) )
 				{
 
-					if( ! is_array($params[$personalization]) ) return array('error' => true, 'message' => "'{$personalization}' email address(es) must be specified in an array.");
+					if( ! is_array($params[$personalization]) ) return array('error' => true, 'message' => "'{$personalization}' email address(es) must be specified in an array.", 'status' => 0);
 
 					foreach($params[$personalization] as $recipient)
 					{
@@ -161,12 +161,12 @@ if ( ! function_exists('sendgrid'))
 			if( isset($params['attachments']) )
 			{
 
-				if( ! is_array($params['attachments']) ) return array('error' => true, 'message' => 'Attachments must be included in an array.');
+				if( ! is_array($params['attachments']) ) return array('error' => true, 'message' => 'Attachments must be included in an array.', 'status' => 0);
 
 				foreach($params['attachments'] as $attachment)
 				{
 
-					if( empty($attachment['content']) || empty($attachment['type']) || empty($attachment['filename']) ) return array('error' => true, 'message' => "Each attachment must be an array that includes values for 'content', 'type', and 'filename'.");
+					if( empty($attachment['content']) || empty($attachment['type']) || empty($attachment['filename']) ) return array('error' => true, 'message' => "Each attachment must be an array that includes values for `content`, `type`, and `filename`.", 'status' => 0);
 
 					$fields['attachments'][] = array(
 						'content' => $attachment['content'],

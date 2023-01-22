@@ -1,6 +1,8 @@
 <?php
 
 /**
+* https://github.com/jrmro/sendgrid/
+* 
 * Lightweight function that abstracts sending an html email using SendGrid's v3 Mail Send REST API via cURL:
 * https://docs.sendgrid.com/for-developers/sending-email/curl-examples
 *
@@ -25,7 +27,7 @@
 * ]);
 *
 * @author     Joseph Romero
-* @version    1.0
+* @version    1.1
 * ...
 */
 
@@ -113,9 +115,36 @@ if ( ! function_exists('sendgrid'))
 
 					if( ! is_array($params[$personalization]) ) return array('error' => true, 'message' => "'{$personalization}' email address(es) must be specified in an array.");
 
-					foreach($params[$personalization] as $email)
+					foreach($params[$personalization] as $recipient)
 					{
-						if( ! empty($email)) $fields['personalizations'][0][$personalization][] = ['email' => $email];	
+						if( ! empty($recipient)) 
+						{
+							
+							// Check if recipient is a valid email
+							if(filter_var($recipient, FILTER_VALIDATE_EMAIL) !== false) 
+							{
+								$fields['personalizations'][0][$personalization][] = ['email' => $recipient];
+								continue;
+							}
+							
+							// If not, check if recipient specified as `Name <email@example.com>`
+
+								// Parse recipient for email
+								preg_match("/<\S+@\S+>/", $recipient, $email);
+								$email = ! empty($email[0]) ? trim($email[0], '<>') : '';
+
+								if(filter_var($email, FILTER_VALIDATE_EMAIL) !== false)
+								{
+									// Parse recipient for name
+									$name = preg_replace("/\s*<\S+@\S+>\s*/", '', $recipient);
+									$name = ! empty($name) ? trim($name) : '';
+
+									if(empty($name)) $fields['personalizations'][0][$personalization][] = ['email' => $email]; 
+									else $fields['personalizations'][0][$personalization][] = ['email' => $email, 'name' => $name];
+									
+								}							
+
+						}
 					}
 					
 				}
@@ -174,21 +203,27 @@ if ( ! function_exists('sendgrid'))
 			));
 
 			$response = curl_exec($curl);
-
+			$http_code = (int)curl_getinfo($curl, CURLINFO_RESPONSE_CODE);
 			curl_close($curl);
 
 
-		// Output Response	
+		// Output	
 		
 			// cURL Failed
-			if($response === false) return array('error' => true, 'message' => 'cURL failed.');		
+			if($response === false) return array('error' => true, 'message' => 'cURL failed.', 'status' => $http_code);		
 			
-			// SendGrid Error
+			// cURL Success: Evaluate http response code
+			$is_http_success = (bool)($http_code >= 200 && $http_code <= 299);
+			if( ! $is_http_success) return array('error' => true, 'message' => 'Error: See `status` for http code.', 'status' => $http_code);	
+
+			// HTTP Code Success: Parse cURL Response
 			$response = json_decode($response, true);
-			if( ! empty($response['errors'][0]['message'])) return array('error' => true, 'message' => $response['errors'][0]['message']);
-			
-			// Success
-			return array('error' => false, 'message' => 'Success!');
+
+				// SendGrid Error
+				if( ! empty($response['errors'][0]['message'])) return array('error' => true, 'message' => $response['errors'][0]['message'], 'status' => $http_code);
+				
+				// Success
+				return array('error' => false, 'message' => 'Success!', 'status' => $http_code);
 
 	}
 }
